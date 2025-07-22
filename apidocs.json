@@ -1,13 +1,13 @@
 {
   "openapi": "3.0.1",
   "info": {
-    "title": "om",
+    "title": "uhome",
     "description": "",
     "version": "1.0.0"
   },
   "tags": [],
   "paths": {
-    "/app/reg.php": {
+    "/api/auth/register": {
       "post": {
         "summary": "注册",
         "deprecated": false,
@@ -20,63 +20,25 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "u_usernick": {
-                    "example": "又蓝",
+                  "username": {
+                    "example": "youlan",
                     "type": "string"
                   },
-                  "u_username": {
-                    "type": "string",
-                    "example": ",1241804731"
-                  },
-                  "u_password": {
+                  "password": {
                     "example": "123456",
                     "type": "string"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {}
-                }
-              }
-            },
-            "headers": {}
-          }
-        },
-        "security": []
-      }
-    },
-    "/app/login.php": {
-      "post": {
-        "summary": "登录接口",
-        "deprecated": false,
-        "description": "",
-        "tags": [],
-        "parameters": [],
-        "requestBody": {
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "u_username": {
-                    "example": "1241804731",
+                  },
+                  "email": {
+                    "example": "123456@qq.com",
                     "type": "string"
                   },
-                  "u_password": {
-                    "example": "123456",
+                  "nickname": {
+                    "example": "蓝",
                     "type": "string"
                   }
                 }
-              }
+              },
+              "examples": {}
             }
           }
         },
@@ -97,28 +59,23 @@
         "security": []
       }
     },
-    "/app/getReport.php": {
+    "/api/auth/login": {
       "post": {
-        "summary": "查询记录",
+        "summary": "登录",
         "deprecated": false,
         "description": "",
         "tags": [],
         "parameters": [],
         "requestBody": {
           "content": {
-            "multipart/form-data": {
+            "application/json": {
               "schema": {
                 "type": "object",
-                "properties": {
-                  "page": {
-                    "example": "1",
-                    "type": "string"
-                  },
-                  "limit": {
-                    "example": "10",
-                    "type": "string"
-                  }
-                }
+                "properties": {}
+              },
+              "example": {
+                "username": "youlan",
+                "password": "12346"
               }
             }
           }
@@ -140,57 +97,65 @@
         "security": []
       }
     },
-    "/app/statistics.php": {
+    "/api/auth/me": {
       "post": {
-        "summary": "首页统计",
-        "deprecated": false,
-        "description": "",
-        "tags": [],
-        "parameters": [],
-        "requestBody": {
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "r_uuid": {
-                    "example": "65e983fd82fed",
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {}
-                }
-              }
-            },
-            "headers": {}
-          }
-        },
-        "security": []
-      }
-    },
-    "/app/get_bt.php": {
-      "post": {
-        "summary": "饼图数据",
+        "summary": "获取用户信息",
         "deprecated": false,
         "description": "",
         "tags": [],
         "parameters": [
           {
-            "name": "selectedDate",
-            "in": "query",
+            "name": "Authorization",
+            "in": "header",
             "description": "",
-            "required": true,
+            "required": false,
+            "example": "{{Authorization}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 0,
+                  "data": {
+                    "create_time": "2025-07-21 15:20:11",
+                    "email": "123456@qq.com",
+                    "id": 1,
+                    "nickname": "蓝",
+                    "username": "youlan"
+                  },
+                  "message": "获取成功"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/auth/profile": {
+      "post": {
+        "summary": "编辑资料",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "",
+            "required": false,
+            "example": "{{Authorization}}",
             "schema": {
               "type": "string"
             }
@@ -198,23 +163,14 @@
         ],
         "requestBody": {
           "content": {
-            "multipart/form-data": {
+            "application/json": {
               "schema": {
                 "type": "object",
-                "properties": {
-                  "selectedDate": {
-                    "example": "2024-03-11",
-                    "type": "string"
-                  },
-                  "uuid": {
-                    "example": "65e983fd82fed",
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "selectedDate",
-                  "uuid"
-                ]
+                "properties": {}
+              },
+              "example": {
+                "nickname": "123",
+                "email": "11222211@qq.com"
               }
             }
           }
@@ -227,6 +183,10 @@
                 "schema": {
                   "type": "object",
                   "properties": {}
+                },
+                "example": {
+                  "code": 0,
+                  "message": "资料更新成功"
                 }
               }
             },
@@ -236,32 +196,121 @@
         "security": []
       }
     },
-    "/app/get_week.php": {
+    "/api/auth/change-password": {
       "post": {
-        "summary": "折线图数据",
+        "summary": "修改密码",
         "deprecated": false,
         "description": "",
         "tags": [],
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "",
+            "required": false,
+            "example": "{{Authorization}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
-            "multipart/form-data": {
+            "application/json": {
               "schema": {
                 "type": "object",
-                "properties": {
-                  "selectedDate": {
-                    "example": "2024-03-11",
-                    "type": "string"
-                  },
-                  "uuid": {
-                    "example": "65e983fd82fed",
-                    "type": "string"
-                  }
-                }
+                "properties": {}
+              },
+              "example": {
+                "old_password": "123456",
+                "new_password": "123456"
               }
             }
           }
         },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 0,
+                  "message": "密码修改成功"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/auth/device_count": {
+      "get": {
+        "summary": "获取设备总数",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "",
+            "required": false,
+            "example": "{{Authorization}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "code": 0,
+                  "data": {
+                    "offline": 0,
+                    "online": "1",
+                    "total": 1
+                  },
+                  "message": "获取成功"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/device/list": {
+      "get": {
+        "summary": "获取设备列表",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "",
+            "required": false,
+            "example": "{{Authorization}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "",

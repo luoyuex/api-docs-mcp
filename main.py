@@ -33,55 +33,73 @@ def parse_schema(schema):
         })
     return result
 
-# 动态注册每个工具
-def make_tool_func_with_signature(path, method, details, tool):
-    schema = tool.inputSchema or {}
-    props = schema.get("properties", {})
-    required = set(schema.get("required", []))
-    # 构造参数列表
-    params = []
-    annotations = {}
-    for name, info in props.items():
-        typ = info.get("type", "str")
-        if typ == "integer":
-            pytyp = int
-        elif typ == "number":
-            pytyp = float
-        elif typ == "boolean":
-            pytyp = bool
-        else:
-            pytyp = str
-        annotations[name] = pytyp
-        if name in required:
-            params.append(inspect.Parameter(name, inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=pytyp))
-        else:
-            params.append(inspect.Parameter(name, inspect.Parameter.POSITIONAL_OR_KEYWORD, default=None, annotation=pytyp))
-    # 构造函数
-    async def tool_func_template(**kwargs):
-        url = f"http://127.0.0.1:8000{path}"
-        headers = {}
-        files = None
-        data = None
-        json_data = None
-        if details.get("requestBody", {}).get("content", {}).get("multipart/form-data"):
-            files = {}
-            for k, v in kwargs.items():
-                files[k] = v
-        else:
-            json_data = kwargs
-        async with httpx.AsyncClient() as client:
-            resp = await client.request(method.upper(), url, headers=headers, files=files, json=json_data, data=data)
-            try:
-                return resp.json()
-            except Exception:
-                return resp.text
-    # 设置签名
-    tool_func = types.FunctionType(tool_func_template.__code__, tool_func_template.__globals__, name=tool.name, argdefs=tool_func_template.__defaults__, closure=tool_func_template.__closure__)
-    tool_func.__annotations__ = annotations
-    tool_func.__doc__ = tool.description or ""
-    tool_func.__signature__ = inspect.Signature(params)
-    return tool_func
+def simplify_data(data):
+    """简化数据结构，数组只保留第一个元素"""
+    if isinstance(data, list) and len(data) > 0:
+        return simplify_data(data[0])
+    elif isinstance(data, dict):
+        return {k: simplify_data(v) for k, v in data.items()}
+    else:
+        return data
 
+def extract_example_data(details):
+    """从接口定义中提取并简化案例数据"""
+    examples = {}
+    
+    # 获取请求示例
+    request_body = details.get("requestBody", {})
+    content = request_body.get("content", {})
+    
+    for content_type, content_info in content.items():
+        example = content_info.get("example")
+        if example:
+            examples["request"] = simplify_data(example)
+            break
+    
+    # 获取响应示例
+    responses = details.get("responses", {})
+    for status, response_info in responses.items():
+        response_content = response_info.get("content", {})
+        for content_type, content_info in response_content.items():
+            example = content_info.get("example")
+            if example:
+                examples["response"] = simplify_data(example)
+                break
+        if "response" in examples:
+            break
+    
+    return examples
+
+def make_schema_tool(tool_name, schema, details):
+    """创建字段查询工具函数"""
+    async def schema_func() -> dict:
+        """获取接口的字段信息和案例数据"""
+        result = {
+            "summary": details.get("summary", ""),
+            "method": "",
+            "path": ""
+        }
+        
+        # 获取字段信息
+        fields = parse_schema(schema)
+        if fields:
+            result["fields"] = fields
+        
+        # 获取案例数据
+        examples = extract_example_data(details)
+        if examples:
+            result["examples"] = examples
+        
+        # 如果既没有字段也没有案例
+        if not fields and not examples:
+            result["note"] = "此接口无参数字段和案例数据"
+        
+        return result
+    
+    schema_func.__name__ = tool_name
+    return schema_func
+
+# 只注册字段查询工具，不注册接口调用工具
 for path, path_item in openapi_spec.get("paths", {}).items():
     for method, details in path_item.items():
         op_id = details.get("operationId") or f"{method.upper()} {path}"
@@ -89,22 +107,11 @@ for path, path_item in openapi_spec.get("paths", {}).items():
         tool = next((t for t in openapi_tools if t.name == op_id), None)
         if not tool:
             continue
-        # 用明确参数签名注册工具
-        func = make_tool_func_with_signature(path, method, details, tool)
-        mcp.add_tool(func)
-        # 注册 schema 查询工具
-        def make_schema_func(schema, name, desc):
-            async def schema_func() -> list:
-                """返回接口的参数字段信息（字段名、类型、是否必填、备注）"""
-                fields = parse_schema(schema)
-                if not fields:
-                    return {"message": "该接口没有定义参数 schema"}
-                return fields
-            schema_func.__name__ = name
-            schema_func.__doc__ = desc
-            return schema_func
-        schema_tool_name = f"get_{op_id}_schema"
-        schema_func = make_schema_func(tool.inputSchema, schema_tool_name, f"获取 {op_id} 的参数定义")
+        
+        # 只注册字段查询工具
+        schema_tool_name = f"get_{op_id}_fields"
+        schema_func = make_schema_tool(schema_tool_name, tool.inputSchema, details)
+        schema_func.__doc__ = f"获取 {details.get('summary', op_id)} 接口的字段信息或案例数据"
         mcp.add_tool(schema_func)
 
 if __name__ == "__main__":
