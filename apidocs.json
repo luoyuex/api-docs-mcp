@@ -293,6 +293,66 @@
         "security": []
       }
     },
+    "/api/device/update-name": {
+      "post": {
+        "summary": "编辑设备名称",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "",
+            "required": false,
+            "example": "{{Authorization}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {}
+              },
+              "example": {
+                "device_id": "esp32-abc123",
+                "device_name": "test"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
     "/api/device/list": {
       "get": {
         "summary": "获取设备列表",
@@ -318,7 +378,67 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {}
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "create_time": {
+                            "type": "string"
+                          },
+                          "device_id": {
+                            "type": "string"
+                          },
+                          "device_model": {
+                            "type": "string"
+                          },
+                          "device_name": {
+                            "type": "string"
+                          },
+                          "humidity": {
+                            "type": "number",
+                            "nullable": true
+                          },
+                          "last_online": {
+                            "type": "string"
+                          },
+                          "location": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string"
+                          },
+                          "temperature": {
+                            "type": "number",
+                            "nullable": true
+                          }
+                        },
+                        "required": [
+                          "create_time",
+                          "device_id",
+                          "device_model",
+                          "device_name",
+                          "humidity",
+                          "last_online",
+                          "location",
+                          "status",
+                          "temperature"
+                        ]
+                      }
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "data",
+                    "message"
+                  ]
                 }
               }
             },
